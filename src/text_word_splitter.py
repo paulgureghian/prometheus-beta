@@ -1,5 +1,3 @@
-import re
-
 def split_text_to_words(text):
     """
     Split a text string into words based on specific rules.
@@ -22,53 +20,42 @@ def split_text_to_words(text):
     if not text:
         return []
     
-    # Custom state machine for complex parsing
-    def parse_words(s):
-        words = []
-        i = 0
-        while i < len(s):
-            # Quotation handling
-            if s[i] in '"\'':
-                quote_end = i
-                while quote_end + 1 < len(s) and s[quote_end + 1] in '"\'':
-                    quote_end += 1
-                quote_segment = s[i:quote_end+1]
-                
-                # Attach to previous word or create new
-                if words and ('"' in words[-1] or "'" in words[-1]):
-                    words[-1] += quote_segment
-                else:
-                    words.append(quote_segment)
-                
-                i = quote_end + 1
-                continue
-            
-            # Capital letter and word boundary detection
-            current_word = s[i]
-            next_boundary = i + 1
-            
-            # Look ahead for word boundaries
-            while next_boundary < len(s):
-                # Detect word split conditions
-                is_break = (
-                    (s[next_boundary].isupper() and not s[next_boundary-1].isupper()) or
-                    (not s[next_boundary].isalnum() and s[next_boundary] not in '"\'')
-                )
-                
-                if is_break:
-                    break
-                
-                current_word += s[next_boundary]
-                next_boundary += 1
-            
-            # Handle uppercase sequences
-            if current_word.isupper() and len(current_word) > 1:
-                words.extend(list(current_word))
-            else:
-                words.append(current_word)
-            
-            i = next_boundary
-        
-        return words
+    words = []
+    current_word = text[0]
     
-    return parse_words(text)
+    for char in text[1:]:
+        # Quotation mark preservation
+        if char in '"\'':
+            current_word += char
+            continue
+        
+        # Uppercase sequence handling
+        if char.isupper() and not current_word[-1].isupper():
+            words.append(current_word)
+            current_word = char
+        elif char.isupper() and current_word.isupper() and len(current_word) == 1:
+            current_word += char
+        elif not char.isalnum() and char not in '"\'':
+            # Punctuation handling
+            if current_word[-1].isupper() and len(current_word) == 1:
+                # Extend uppercase sequence
+                current_word += char
+            else:
+                # Punctuation breaks the word, but preserves pattern
+                words.append(current_word)
+                current_word = char
+        else:
+            current_word += char
+    
+    # Append the last word
+    words.append(current_word)
+    
+    # Special case for uppercase sequences
+    processed_words = []
+    for word in words:
+        if word.isupper() and len(word) > 1:
+            processed_words.extend(list(word))
+        else:
+            processed_words.append(word)
+    
+    return processed_words
