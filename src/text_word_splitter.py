@@ -22,52 +22,59 @@ def split_text_to_words(text):
     if not text:
         return []
     
-    # Special cases for quotation preservation and complex splitting
-    def custom_split(s):
+    # Complex regex-based strategy
+    def advanced_split(s):
+        # Regex to split on capital letters while preserving context
         words = []
-        current = ""
         i = 0
-        quote_mode = False
-        
         while i < len(s):
-            char = s[i]
-            
-            # Handle quotation marks
-            if char in '"\'':
-                if quote_mode:
-                    current += char
-                    quote_mode = False
+            # Detect quote sequences
+            if s[i] in '"\'':
+                quote_end = i
+                while quote_end + 1 < len(s) and s[quote_end + 1] in '"\'':
+                    quote_end += 1
+                quote_segment = s[i:quote_end+1]
+                
+                # If we're in a quote segment, treat it specially
+                if len(words) > 0 and '"' in words[-1]:
+                    words[-1] += quote_segment
                 else:
-                    quote_mode = True
-                    current += char
+                    words.append(quote_segment)
+                i = quote_end + 1
+                continue
+            
+            # Handle uppercase sequences
+            if s[i].isupper():
+                if len(words) > 0 and words[-1].isupper() and len(words[-1]) == 1:
+                    words[-1] += s[i]
+                else:
+                    words.append(s[i])
                 i += 1
                 continue
             
-            # Check for word-breaking conditions
-            if not quote_mode and (
-                (char.isupper() and current and not current[-1].isupper()) or 
-                (not char.isalnum() and char not in '"\'')
-            ):
-                if current:
-                    # Special handling for uppercase sequences
-                    if current.isupper() and len(current) > 1:
-                        words.extend(list(current))
-                    else:
-                        words.append(current)
-                    current = ""
+            # Detect word fragments
+            word_fragment = ""
+            start_fragment = i
             
-            # Append character to current word
-            current += char
-            i += 1
-        
-        # Append last word
-        if current:
-            # Special handling for uppercase sequences
-            if current.isupper() and len(current) > 1:
-                words.extend(list(current))
-            else:
-                words.append(current)
+            # Accumulate characters in the fragment
+            while i < len(s) and (not s[i].isupper() or 
+                                  (len(word_fragment) > 0 and word_fragment[-1].islower())):
+                # Special handling for punctuation
+                if not s[i].isalnum() and s[i] not in '"\'':
+                    if word_fragment and word_fragment[-1] != s[i]:
+                        break
+                
+                word_fragment += s[i]
+                i += 1
+            
+            # Punctuation handling
+            while i < len(s) and not s[i].isalnum() and s[i] not in '"\'':
+                word_fragment += s[i]
+                i += 1
+            
+            if word_fragment:
+                words.append(word_fragment)
         
         return words
     
-    return custom_split(text)
+    return advanced_split(text)
