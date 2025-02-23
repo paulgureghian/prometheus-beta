@@ -22,30 +22,57 @@ def split_text_to_words(text):
     if not text:
         return []
     
-    # Regex pattern to split on capital letters and punctuation (except quotes)
-    pattern = r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[a-zA-Z])(?=[^\w\s"\']+)'
-    
-    # Special handling to preserve punctuation with words
-    words = re.split(pattern, text)
-    
-    # Further process words to handle punctuation and capital letter sequences
-    processed_words = []
+    # Complex regex pattern for splitting
+    words = []
+    current_word = ""
     i = 0
-    while i < len(words):
-        current_word = words[i]
+    
+    while i < len(text):
+        char = text[i]
         
-        # Handle sequences of capital letters
-        if current_word.isupper() and len(current_word) > 1:
-            processed_words.extend(list(current_word))
+        # Handle quotation marks without breaking words
+        if char in '"\'':
+            quote_start = i
+            while i + 1 < len(text) and text[i+1] in '"\'':
+                i += 1
+            quote_end = i
+            quote_part = text[quote_start:quote_end+1]
+            
+            if current_word:
+                current_word += quote_part
+            else:
+                current_word = quote_part
+            
             i += 1
             continue
         
-        # Look ahead to include adjacent punctuation
-        while i + 1 < len(words) and re.match(r'^[^\w\s"\']+$', words[i+1]):
-            current_word += words[i+1]
-            i += 1
+        # Splitting logic for capital letters and punctuation
+        if char.isupper() and current_word and not current_word[-1].isupper():
+            # Start of a new word when capital letter follows a lowercase
+            words.append(current_word)
+            current_word = char
+        elif not char.isalnum() and char not in '"\'':
+            # Punctuation mark
+            if current_word:
+                words.append(current_word)
+                current_word = char
+            else:
+                current_word = char
+        elif char.isupper():
+            # Handle sequences of capital letters
+            if current_word and current_word.isupper():
+                current_word += char
+            else:
+                if current_word:
+                    words.append(current_word)
+                current_word = char
+        else:
+            current_word += char
         
-        processed_words.append(current_word)
         i += 1
     
-    return processed_words
+    # Append the last word
+    if current_word:
+        words.append(current_word)
+    
+    return words
