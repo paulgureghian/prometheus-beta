@@ -20,80 +20,77 @@ def split_text_to_words(text):
     if not text:
         return []
     
-    def parse_complex_text(s):
+    def split_complex_word(word):
+        result = []
+        current = word[0]
+        
+        for char in word[1:]:
+            if char.isupper() and not current[-1].isupper():
+                result.append(current)
+                current = char
+            else:
+                current += char
+        
+        result.append(current)
+        return result
+    
+    def process_text(s):
         words = []
-        current_word = ""
-        quote_accumulator = ""
-        
-        # Look ahead strategy
-        def look_ahead_collect(start_index):
-            collected_word = s[start_index]
-            index = start_index + 1
-            while index < len(s):
-                # Preserve uppercase character sequences
-                if s[index].isupper() and (not collected_word or collected_word[-1].isupper()):
-                    collected_word += s[index]
-                # Handle punctuation and word boundaries
-                elif not s[index].isalnum() and s[index] not in '"\'':
-                    collected_word += s[index]
-                    break
-                # Normal character progression
-                else:
-                    collected_word += s[index]
-                index += 1
-            return collected_word
-        
         i = 0
-        while i < len(text):
-            char = text[i]
-            
-            # Quotation handling
-            if char in '"\'':
-                quote_accumulator += char
-                i += 1
-                continue
-            
-            # Uppercase splitting strategy
-            if char.isupper():
-                # Complete previous word if needed
-                if current_word:
-                    words.append(current_word + quote_accumulator)
-                    quote_accumulator = ""
-                    current_word = ""
-                
-                # Look ahead and collect uppercase sequences or words
-                word_segment = look_ahead_collect(i)
-                
-                # Handle uppercase sequences
-                if len(word_segment) > 1 and word_segment.isupper():
-                    words.extend(list(word_segment))
-                else:
-                    words.append(word_segment)
-                
-                i += len(word_segment)
-                continue
-            
-            # Handle punctuation
-            if not char.isalnum() and char not in '"\'':
-                # Attach punctuation to previous word or create separate word
-                if current_word:
-                    words.append(current_word + quote_accumulator + char)
-                else:
-                    words.append(char)
-                
-                current_word = ""
-                quote_accumulator = ""
-                i += 1
-                continue
-            
-            # Regular character progression
-            current_word += char
-            i += 1
         
-        # Final word handling
-        if current_word or quote_accumulator:
-            words.append(current_word + quote_accumulator)
+        while i < len(s):
+            char = s[i]
+            
+            # Quotation mark handling
+            if char in '"\'':
+                quote_end = i
+                while quote_end + 1 < len(s) and s[quote_end + 1] in '"\'':
+                    quote_end += 1
+                quote_segment = s[i:quote_end+1]
+                
+                if words and '"' in words[-1]:
+                    words[-1] += quote_segment
+                else:
+                    words.append(quote_segment)
+                
+                i = quote_end + 1
+                continue
+            
+            # Detect word or word fragment
+            if char.isalpha():
+                # Complex word collection
+                fragment = char
+                next_index = i + 1
+                
+                while next_index < len(s):
+                    next_char = s[next_index]
+                    
+                    # Break conditions
+                    if next_char.isupper() and not fragment[-1].isupper():
+                        break
+                    if not next_char.isalnum() and next_char not in '"\'':
+                        break
+                    
+                    fragment += next_char
+                    next_index += 1
+                
+                # Handle uppercase sequences and split words
+                if fragment.isupper() and len(fragment) > 1:
+                    words.extend(list(fragment))
+                else:
+                    words.extend(split_complex_word(fragment))
+                
+                i = next_index
+                continue
+            
+            # Punctuation handling
+            if not char.isalnum() and char not in '"\'':
+                words.append(char)
+                i += 1
+                continue
+            
+            i += 1
         
         return words
     
-    return parse_complex_text(text)
+    return process_text(text)
