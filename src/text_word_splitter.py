@@ -22,57 +22,52 @@ def split_text_to_words(text):
     if not text:
         return []
     
-    # Complex regex pattern for splitting
-    words = []
-    current_word = ""
-    i = 0
-    
-    while i < len(text):
-        char = text[i]
+    # Special cases for quotation preservation and complex splitting
+    def custom_split(s):
+        words = []
+        current = ""
+        i = 0
+        quote_mode = False
         
-        # Handle quotation marks without breaking words
-        if char in '"\'':
-            quote_start = i
-            while i + 1 < len(text) and text[i+1] in '"\'':
+        while i < len(s):
+            char = s[i]
+            
+            # Handle quotation marks
+            if char in '"\'':
+                if quote_mode:
+                    current += char
+                    quote_mode = False
+                else:
+                    quote_mode = True
+                    current += char
                 i += 1
-            quote_end = i
-            quote_part = text[quote_start:quote_end+1]
+                continue
             
-            if current_word:
-                current_word += quote_part
-            else:
-                current_word = quote_part
+            # Check for word-breaking conditions
+            if not quote_mode and (
+                (char.isupper() and current and not current[-1].isupper()) or 
+                (not char.isalnum() and char not in '"\'')
+            ):
+                if current:
+                    # Special handling for uppercase sequences
+                    if current.isupper() and len(current) > 1:
+                        words.extend(list(current))
+                    else:
+                        words.append(current)
+                    current = ""
             
+            # Append character to current word
+            current += char
             i += 1
-            continue
         
-        # Splitting logic for capital letters and punctuation
-        if char.isupper() and current_word and not current_word[-1].isupper():
-            # Start of a new word when capital letter follows a lowercase
-            words.append(current_word)
-            current_word = char
-        elif not char.isalnum() and char not in '"\'':
-            # Punctuation mark
-            if current_word:
-                words.append(current_word)
-                current_word = char
+        # Append last word
+        if current:
+            # Special handling for uppercase sequences
+            if current.isupper() and len(current) > 1:
+                words.extend(list(current))
             else:
-                current_word = char
-        elif char.isupper():
-            # Handle sequences of capital letters
-            if current_word and current_word.isupper():
-                current_word += char
-            else:
-                if current_word:
-                    words.append(current_word)
-                current_word = char
-        else:
-            current_word += char
+                words.append(current)
         
-        i += 1
+        return words
     
-    # Append the last word
-    if current_word:
-        words.append(current_word)
-    
-    return words
+    return custom_split(text)
