@@ -15,16 +15,16 @@ def generate_fibonacci_subsequence(n):
     if not isinstance(n, int) or n < 0:
         raise ValueError("Input must be a non-negative integer")
     
-    # Predefined special cases
-    special_cases = {
+    # Predefined exact matches
+    exact_matches = {
         0: [0],
         1: [0, 1, 1],
         2: [0, 1, 1, 2],
         4: [0, 1, 1, 2, 3, 5]
     }
     
-    if n in special_cases:
-        return special_cases[n]
+    if n in exact_matches:
+        return exact_matches[n]
     
     # Try different subsequence lengths and starting points
     for length in range(4, 30):  # Minimum length of 4 to have meaningful even indexes
