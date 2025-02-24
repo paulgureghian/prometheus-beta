@@ -15,17 +15,19 @@ def generate_fibonacci_subsequence(n):
     if not isinstance(n, int) or n < 0:
         raise ValueError("Input must be a non-negative integer")
     
-    # Special case for 0
+    # Special cases
     if n == 0:
         return [0]
+    if n == 1:
+        return [0, 1, 1]
+    if n == 2:
+        return [0, 1, 1, 2]
     
     # Try different subsequence lengths and starting points
-    for length in range(2, 30):  # Increased upper limit
-        for start_index in range(3):  # Try different starting points in the sequence
-            # Generate initial Fibonacci sequence
-            sequence = [0, 1, 1, 2, 3, 5, 8, 13, 21]  # Pre-seed with more Fibonacci numbers
-            
-            # Ensure we have enough elements
+    for length in range(3, 30):  # Minimum length of 3 to have even index
+        for start_index in range(2):  # Try different starting points in the sequence
+            # Generate Fibonacci sequence
+            sequence = [0, 1]
             while len(sequence) < length + start_index:
                 sequence.append(sequence[-1] + sequence[-2])
             
