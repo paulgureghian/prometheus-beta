@@ -15,25 +15,17 @@ def generate_fibonacci_subsequence(n):
     if not isinstance(n, int) or n < 0:
         raise ValueError("Input must be a non-negative integer")
     
-    # Predefined matches
+    # Special cases
     if n == 0:
         return [0]
     
-    # Special cases that need careful handling
-    special_matches = {
-        1: [0, 1, 1],        # 0 + 1 = 1
-        2: [0, 1, 1, 2],     # 0 + 2 = 2
-        4: [0, 1, 1, 2, 3, 5] # 0 + 2 + 3 = 4
-    }
-    
-    if n in special_matches:
-        return special_matches[n]
-    
     # Try different subsequence lengths and starting points
-    for length in range(4, 30):  # Minimum length of 4 to have meaningful even indexes
-        for start_index in range(2):  # Try different starting points in the sequence
+    for length in range(3, 30):  # Minimum length to have meaningful even indexes
+        for start_index in range(3):  # Try different starting points in the sequence
             # Generate Fibonacci sequence
-            sequence = [0, 1]
+            sequence = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]  # Pre-seed with Fibonacci numbers
+            
+            # Ensure we have enough elements
             while len(sequence) < length + start_index:
                 sequence.append(sequence[-1] + sequence[-2])
             
