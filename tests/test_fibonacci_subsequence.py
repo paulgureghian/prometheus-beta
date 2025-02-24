@@ -14,9 +14,10 @@ def test_specific_inputs():
         (4, [0, 1, 1, 2, 3, 5]), # 0 + 2 + 3 = 4
     ]
     
-    for n, _ in test_cases:
+    for n, expected in test_cases:
         result = generate_fibonacci_subsequence(n)
-        assert sum(result[::2]) == n, f"Failed for input {n}"
+        assert result == expected, f"Failed exact match for input {n}"
+        assert sum(result[::2]) == n, f"Even-indexed sum not equal to {n}"
 
 def test_invalid_inputs():
     """Test error handling for invalid inputs"""
