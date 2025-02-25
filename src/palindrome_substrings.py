@@ -24,21 +24,18 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
     if not s:
         return []
     
-    # Find all palindromes 
-    palindromes = []
     n = len(s)
-    
-    # Greedy approach to find non-overlapping palindromes
     used = [False] * n
+    palindromes = []
     
-    # Find all palindromes and track used indices
-    for length in range(len(s), 0, -1):
+    # Check palindromes of decreasing length
+    for length in range(n, 0, -1):
         for start in range(n - length + 1):
-            # Skip if current characters are already used
+            # Skip if any character is already used
             if any(used[i] for i in range(start, start + length)):
                 continue
             
-            # Check if substring is a palindrome
+            # Check if current substring is a palindrome
             substring = s[start:start+length]
             if _is_palindrome(substring):
                 # Mark characters as used
@@ -46,12 +43,18 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
                     used[i] = True
                 palindromes.append(substring)
     
-    # If no palindromes found, return single characters
+    # If no palindromes found, use single characters
     if not palindromes:
-        palindromes = list(s)
+        palindromes = [c for c in s]
     
-    # Sort lexicographically and remove duplicates
-    return sorted(set(palindromes))
+    # Sort palindromes and remove duplicates
+    result = sorted(set(palindromes))
+    
+    # Prioritize non-single-character palindromes
+    multi_char_pals = [p for p in result if len(p) > 1]
+    single_chars = [p for p in result if len(p) == 1]
+    
+    return multi_char_pals or single_chars
 
 def _is_palindrome(s: str) -> bool:
     """
