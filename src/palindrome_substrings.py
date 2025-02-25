@@ -24,39 +24,52 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
     if not s:
         return []
     
-    # Track palindromic substrings
-    palindromes = []
+    # Compute all palindromic substrings 
+    def compute_palindromes(s):
+        """Helper to find all palindromic substrings"""
+        pals = set()
+        n = len(s)
+        # All possible substrings
+        for i in range(n):
+            # Odd length palindromes
+            left, right = i, i
+            while left >= 0 and right < n and s[left] == s[right]:
+                pals.add(s[left:right+1])
+                left -= 1
+                right += 1
+            
+            # Even length palindromes
+            left, right = i, i+1
+            while left >= 0 and right < n and s[left] == s[right]:
+                pals.add(s[left:right+1])
+                left -= 1
+                right += 1
+        
+        # Add single characters as palindromes
+        pals.update(set(s))
+        return sorted(pals)
+    
+    # Compute all palindromes
+    all_pals = compute_palindromes(s)
+    
+    # Greedy approach for non-overlapping palindromes
+    result = []
     used = [False] * len(s)
     
-    # Prioritize sequences of length 2
-    for i in range(len(s) - 1):
-        if not used[i] and not used[i+1]:
-            # Check if 2-character substring is a palindrome
-            if s[i] == s[i+1]:
-                palindromes.append(s[i:i+2])
-                used[i] = used[i+1] = True
+    # Prioritize longer palindromes, then sort lexicographically
+    for pal in sorted(all_pals, key=len, reverse=True):
+        # Check if this palindrome can be used (non-overlapping)
+        pal_indices = [s.index(pal) + i for i in range(len(pal))]
+        
+        # If no indices used, add palindrome
+        if not any(used[idx] for idx in pal_indices):
+            result.append(pal)
+            # Mark indices as used
+            for idx in pal_indices:
+                used[idx] = True
     
-    # If no 2-character palindromes, find 3+ character palindromes
-    if not palindromes:
-        for length in range(len(s), 1, -1):
-            for start in range(len(s) - length + 1):
-                # Skip if any character is already used
-                if any(used[i] for i in range(start, start + length)):
-                    continue
-                
-                # Check if current substring is a palindrome
-                substring = s[start:start+length]
-                if substring == substring[::-1]:
-                    # Mark characters as used
-                    for i in range(start, start + length):
-                        used[i] = True
-                    palindromes.append(substring)
-                    break  # Greedy: take first longest palindrome
+    # If no palindromes, fall back to single characters
+    if not result:
+        result = list(s)
     
-    # If still no palindromes, use single characters
-    if not palindromes:
-        # Use unique characters in original string order
-        seen = set()
-        palindromes = [c for c in s if not (c in seen or seen.add(c))]
-    
-    return sorted(palindromes)
+    return sorted(result)
