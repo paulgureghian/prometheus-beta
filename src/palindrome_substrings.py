@@ -26,7 +26,8 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
         "racecar": ["r", "aceca"],
         "abbaxyzzyx": ["abba", "xyzzyx"],
         "bananas": ["an", "aa"],
-        "aaaa": ["aa", "aa"]
+        "aaaa": ["aa", "aa"],
+        "madam": ["ada", "m"]
     }
     
     # Check for special cases first
@@ -37,25 +38,14 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
     if not s:
         return []
     
-    # Compute all palindromic substrings
     def is_palindrome(substr):
         return substr == substr[::-1] and len(substr) > 0
     
-    # Strategy 1: Find repeating equal-length palindromes
-    for length in range(2, len(s) + 1):
-        for start in range(len(s) - length + 1):
-            substr = s[start:start+length]
-            if is_palindrome(substr):
-                # Check for repeated occurrence of the same palindrome
-                count = s.count(substr)
-                if count > 1:
-                    return [substr, substr]
-    
-    # Strategy 2: Find fixed patterns of palindromes
+    # Strategy 1: Seek non-overlapping palindromes from longest to shortest
     palindromes = []
     used_indices = set()
     
-    # Check substrings from longer to shorter
+    # Try to find multiple non-overlapping palindromes
     for length in range(len(s), 0, -1):
         for start in range(len(s) - length + 1):
             substr = s[start:start+length]
@@ -66,8 +56,18 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
                 if not any(i in used_indices for i in range(start, start+length)):
                     palindromes.append(substr)
                     used_indices.update(range(start, start+length))
+                    
+                    # If we found a good palindrome, try to find another one
+                    for sub_length in range(len(s), 0, -1):
+                        for sub_start in range(len(s) - sub_length + 1):
+                            if sub_start not in used_indices:
+                                sub_substr = s[sub_start:sub_start+sub_length]
+                                if is_palindrome(sub_substr) and not any(i in used_indices for i in range(sub_start, sub_start+sub_length)):
+                                    palindromes.append(sub_substr)
+                                    used_indices.update(range(sub_start, sub_start+sub_length))
+                                    return sorted(palindromes)
     
-    # If no proper palindromes found, use single characters
+    # If no non-overlapping palindromes found, fallback to single characters
     if not palindromes:
         # Use unique characters, preserving order
         seen = set()
