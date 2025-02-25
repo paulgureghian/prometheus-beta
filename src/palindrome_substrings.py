@@ -24,66 +24,43 @@ def find_non_overlapping_palindromes(s: str) -> list[str]:
     if not s:
         return []
     
-    # Find all palindromes and track used indices
+    # Find all palindromes 
     palindromes = []
-    used_indices = set()
+    n = len(s)
     
-    # Check each possible substring
-    for i in range(len(s)):
-        # Skip already used indices
-        if i in used_indices:
-            continue
-        
-        # Check for odd-length palindromes
-        odd_pal = _find_palindrome_around_center(s, i, i, used_indices)
-        if odd_pal:
-            palindromes.append(odd_pal)
-        
-        # Check for even-length palindromes
-        even_pal = _find_palindrome_around_center(s, i, i+1, used_indices)
-        if even_pal:
-            palindromes.append(even_pal)
+    # Greedy approach to find non-overlapping palindromes
+    used = [False] * n
     
-    # Add single characters as fallback palindromes
-    for i in range(len(s)):
-        if i not in used_indices:
-            palindromes.append(s[i])
+    # Find all palindromes and track used indices
+    for length in range(len(s), 0, -1):
+        for start in range(n - length + 1):
+            # Skip if current characters are already used
+            if any(used[i] for i in range(start, start + length)):
+                continue
+            
+            # Check if substring is a palindrome
+            substring = s[start:start+length]
+            if _is_palindrome(substring):
+                # Mark characters as used
+                for i in range(start, start + length):
+                    used[i] = True
+                palindromes.append(substring)
     
-    # Remove duplicates and sort lexicographically
+    # If no palindromes found, return single characters
+    if not palindromes:
+        palindromes = list(s)
+    
+    # Sort lexicographically and remove duplicates
     return sorted(set(palindromes))
 
-def _find_palindrome_around_center(s: str, left: int, right: int, used_indices: set) -> str:
+def _is_palindrome(s: str) -> bool:
     """
-    Find the longest palindrome centered at given indices.
+    Check if a string is a palindrome.
 
     Args:
-        s (str): Input string
-        left (int): Left index of potential palindrome
-        right (int): Right index of potential palindrome
-        used_indices (set): Set to track already used indices
+        s (str): String to check
 
     Returns:
-        str: Longest palindrome found, or empty string
+        bool: True if string is a palindrome, False otherwise
     """
-    # Extend while maintaining palindrome
-    while left >= 0 and right < len(s) and s[left] == s[right]:
-        left -= 1
-        right += 1
-    
-    # Backtrack to last valid palindrome
-    left += 1
-    right -= 1
-    
-    # Check if palindrome is valid and not overlapping
-    if left == right:
-        if left not in used_indices:
-            used_indices.add(left)
-            return s[left]
-    elif left < right:
-        # Check if indices are free
-        if all(i not in used_indices for i in range(left, right+1)):
-            # Mark all indices as used
-            used_indices.update(range(left, right+1))
-            return s[left:right+1]
-    
-    return ''
+    return s == s[::-1] and len(s) > 0
